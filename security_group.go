@@ -44,9 +44,12 @@ type SecurityGroupInstance struct {
 	Dependencies []string `json:"dependencies"`
 }
 
-func parseSecurityGroup(sg []interface{}) []SecurityGroupInstance {
+func parseSecurityGroup(sg []interface{}) SecurityGroupInstance {
 	var sgi []SecurityGroupInstance
 	v, _ := json.Marshal(sg)
 	json.Unmarshal(v, &sgi)
-	return sgi
+	if len(sgi) > 0 {
+		return sgi[0]
+	}
+	return SecurityGroupInstance{}
 }

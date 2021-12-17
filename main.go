@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -41,6 +42,10 @@ func main() {
 
 	flag.Parse()
 
+	if _, err := os.Stat(*filePath); errors.Is(err, os.ErrNotExist) {
+		log.Fatal(err)
+	}
+
 	tfFile := filepath.Base(*filePath)
 	if !strings.HasSuffix(tfFile, "tfstate.backup") && !strings.HasSuffix(tfFile, "tfstate") {
 		fmt.Println("I don't know about this file format :(")
@@ -60,7 +65,7 @@ func main() {
 
 	ec2s := tfParser.listPublicInstances()
 	if len(ec2s) > 0 {
-		fmt.Printf("I found following EC2 instances which can be access from the Internet !!!!!!!!\n\n\n")
+		fmt.Printf("I've found following %v EC2 instance(s) which can be accessed from the Internet !!!!!!!!\n\n", len(ec2s))
 		v, _ := json.MarshalIndent(ec2s, "", "   ")
 		fmt.Println(string(v))
 	} else {
@@ -116,7 +121,7 @@ func (p Parser) isPublicSubnet(awsSubId string) bool {
 	routeTables := make(map[string]bool)
 
 	for _, v := range ass {
-		assocInstance := v.([]RouteTableAssocInstance)[0]
+		assocInstance := v.(RouteTableAssocInstance)
 		if assocInstance.Attributes.SubnetID == awsSubId {
 			routeTables[assocInstance.Attributes.RouteTableID] = true
 		}
@@ -128,7 +133,7 @@ func (p Parser) isPublicSubnet(awsSubId string) bool {
 
 	tfRoutes := p.state["aws_route"]
 	for _, v := range tfRoutes {
-		assocInstance := v.([]RouteInstance)[0]
+		assocInstance := v.(RouteInstance)
 		routeTableId := assocInstance.Attributes.RouteTableID
 		gateWayId := assocInstance.Attributes.GatewayID
 		destinationAddr := assocInstance.Attributes.DestinationCidrBlock
@@ -147,7 +152,7 @@ func (p Parser) listPublicInstances() []Ec2Instance {
 	var publicEc2s []Ec2Instance
 
 	for _, v := range tfec2s {
-		ec2 := v.([]Ec2Instance)[0]
+		ec2 := v.(Ec2Instance)
 		subnetId := ec2.Attributes.SubnetID
 		publicIP := ec2.Attributes.PublicIP
 		var sgs []string
@@ -169,7 +174,7 @@ func (p Parser) listPublicInstances() []Ec2Instance {
 func (p Parser) canAccess(tfSgs []string, inter, port string) bool {
 	for _, tfSg := range tfSgs {
 		tsg := p.state["aws_security_group"][tfSg]
-		tsgInstance := tsg.([]SecurityGroupInstance)[0]
+		tsgInstance := tsg.(SecurityGroupInstance)
 
 		for _, ing := range tsgInstance.Attributes.Ingress {
 			if strconv.Itoa(ing.ToPort) == port && existsCIDR(ing.CidrBlocks, inter) {

@@ -78,9 +78,12 @@ type Ec2Instance struct {
 	Dependencies []string `json:"dependencies"`
 }
 
-func parseEc2Instance(s []interface{}) []Ec2Instance {
+func parseEc2Instance(s []interface{}) Ec2Instance {
 	var si []Ec2Instance
 	v, _ := json.Marshal(s)
 	json.Unmarshal(v, &si)
-	return si
+	if len(si) > 0 {
+		return si[0]
+	}
+	return Ec2Instance{}
 }

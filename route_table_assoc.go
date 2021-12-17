@@ -14,9 +14,12 @@ type RouteTableAssocInstance struct {
 	Dependencies []string `json:"dependencies"`
 }
 
-func parseRouteTableAssoc(s []interface{}) []RouteTableAssocInstance {
+func parseRouteTableAssoc(s []interface{}) RouteTableAssocInstance {
 	var si []RouteTableAssocInstance
 	v, _ := json.Marshal(s)
 	json.Unmarshal(v, &si)
-	return si
+	if len(si) > 0 {
+		return si[0]
+	}
+	return RouteTableAssocInstance{}
 }

@@ -29,9 +29,12 @@ type RouteInstance struct {
 	Dependencies []string `json:"dependencies"`
 }
 
-func parseRoute(s []interface{}) []RouteInstance {
+func parseRoute(s []interface{}) RouteInstance {
 	var si []RouteInstance
 	v, _ := json.Marshal(s)
 	json.Unmarshal(v, &si)
-	return si
+	if len(si) > 0 {
+		return si[0]
+	}
+	return RouteInstance{}
 }

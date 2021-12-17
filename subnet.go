@@ -31,9 +31,12 @@ type SubnetInstance struct {
 	Dependencies []string `json:"dependencies"`
 }
 
-func parseSubnet(s []interface{}) []SubnetInstance {
+func parseSubnet(s []interface{}) SubnetInstance {
 	var si []SubnetInstance
 	v, _ := json.Marshal(s)
 	json.Unmarshal(v, &si)
-	return si
+	if len(si) > 0 {
+		return si[0]
+	}
+	return SubnetInstance{}
 }
