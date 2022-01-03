@@ -78,6 +78,12 @@ type Ec2Instance struct {
 	Dependencies []string `json:"dependencies"`
 }
 
+type PublicInstance struct {
+	Id        string `json:"instance_id"`
+	PrivateIP string `json:"private_ip"`
+	PublicIP  string `json:"public_ip"`
+}
+
 func parseEc2Instance(s []interface{}) Ec2Instance {
 	var si []Ec2Instance
 	v, _ := json.Marshal(s)

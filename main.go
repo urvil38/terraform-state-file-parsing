@@ -38,7 +38,11 @@ type Parser struct {
 }
 
 func main() {
+
+	var verbose bool
 	filePath := flag.String("file", "terraform.tfstate.backup", "path of terraform state file")
+	flag.BoolVar(&verbose, "verbose", false, "provide detailed output")
+	flag.BoolVar(&verbose, "vv", false, "provide detailed output")
 
 	flag.Parse()
 
@@ -65,9 +69,21 @@ func main() {
 
 	ec2s := tfParser.listPublicInstances()
 	if len(ec2s) > 0 {
-		fmt.Printf("I've found following %v EC2 instance(s) which can be accessed from the Internet !!!!!!!!\n\n", len(ec2s))
-		v, _ := json.MarshalIndent(ec2s, "", "   ")
-		fmt.Println(string(v))
+		if verbose {
+			v, _ := json.MarshalIndent(ec2s, "", "   ")
+			fmt.Println(string(v))
+		} else {
+			var pis []PublicInstance
+			for _, ec2 := range ec2s {
+				pis = append(pis, PublicInstance{
+					Id:        ec2.Attributes.ID,
+					PrivateIP: ec2.Attributes.PrivateIP,
+					PublicIP:  ec2.Attributes.PublicIP,
+				})
+			}
+			v, _ := json.MarshalIndent(pis, "", "   ")
+			fmt.Println(string(v))
+		}
 	} else {
 		fmt.Println("You are safe from the Internet :)")
 	}
