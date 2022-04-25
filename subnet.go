@@ -1,7 +1,5 @@
 package main
 
-import "encoding/json"
-
 type SubnetInstance struct {
 	SchemaVersion int `json:"schema_version"`
 	Attributes    struct {
@@ -24,19 +22,9 @@ type SubnetInstance struct {
 		TagsAll struct {
 			Name string `json:"Name"`
 		} `json:"tags_all"`
-		Timeouts interface{} `json:"timeouts"`
-		VpcID    string      `json:"vpc_id"`
+		Timeouts any    `json:"timeouts"`
+		VpcID    string `json:"vpc_id"`
 	} `json:"attributes"`
 	Private      string   `json:"private"`
 	Dependencies []string `json:"dependencies"`
-}
-
-func parseSubnet(s []interface{}) SubnetInstance {
-	var si []SubnetInstance
-	v, _ := json.Marshal(s)
-	json.Unmarshal(v, &si)
-	if len(si) > 0 {
-		return si[0]
-	}
-	return SubnetInstance{}
 }

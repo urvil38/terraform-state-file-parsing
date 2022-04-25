@@ -26,10 +26,10 @@ type Resource struct {
 	Type      string        `json:"type"`
 	Name      string        `json:"name"`
 	Provider  string        `json:"provider"`
-	Instances []interface{} `json:"instances"`
+	Instances []any `json:"instances"`
 }
 
-type tfInstance map[string]interface{}
+type tfInstance map[string]any
 
 type tf map[string]tfInstance
 
@@ -100,18 +100,18 @@ func (p *Parser) buildState(b []byte) error {
 	tfMap := make(tf)
 
 	for _, r := range tfs.Resources {
-		var inter interface{}
+		var inter any
 		switch r.Type {
 		case "aws_subnet":
-			inter = parseSubnet(r.Instances)
+			inter = parseInstance[SubnetInstance](r.Instances)
 		case "aws_route":
-			inter = parseRoute(r.Instances)
+			inter = parseInstance[RouteInstance](r.Instances)
 		case "aws_route_table_association":
-			inter = parseRouteTableAssoc(r.Instances)
+			inter = parseInstance[RouteTableAssocInstance](r.Instances)
 		case "aws_security_group":
-			inter = parseSecurityGroup(r.Instances)
+			inter = parseInstance[SecurityGroupInstance](r.Instances)
 		case "aws_instance":
-			inter = parseEc2Instance(r.Instances)
+			inter = parseInstance[Ec2Instance](r.Instances)
 		default:
 			inter = r.Instances
 		}
