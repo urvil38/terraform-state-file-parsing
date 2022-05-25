@@ -1,4 +1,4 @@
-package main
+package types
 
 type SecurityGroupInstance struct {
 	SchemaVersion int `json:"schema_version"`

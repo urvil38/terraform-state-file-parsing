@@ -1,4 +1,4 @@
-package main
+package types
 
 type SubnetInstance struct {
 	SchemaVersion int `json:"schema_version"`

@@ -11,6 +11,8 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	"github.com/urvil38/terraform-state-file-parsing/types"
 )
 
 type tfState struct {
@@ -73,9 +75,9 @@ func main() {
 			v, _ := json.MarshalIndent(ec2s, "", "   ")
 			fmt.Println(string(v))
 		} else {
-			var pis []PublicInstance
+			var pis []types.PublicInstance
 			for _, ec2 := range ec2s {
-				pis = append(pis, PublicInstance{
+				pis = append(pis, types.PublicInstance{
 					Id:        ec2.Attributes.ID,
 					PrivateIP: ec2.Attributes.PrivateIP,
 					PublicIP:  ec2.Attributes.PublicIP,
@@ -103,15 +105,15 @@ func (p *Parser) buildState(b []byte) error {
 		var inter any
 		switch r.Type {
 		case "aws_subnet":
-			inter = parseInstance[SubnetInstance](r.Instances)
+			inter = parseInstance[types.SubnetInstance](r.Instances)
 		case "aws_route":
-			inter = parseInstance[RouteInstance](r.Instances)
+			inter = parseInstance[types.RouteInstance](r.Instances)
 		case "aws_route_table_association":
-			inter = parseInstance[RouteTableAssocInstance](r.Instances)
+			inter = parseInstance[types.RouteTableAssocInstance](r.Instances)
 		case "aws_security_group":
-			inter = parseInstance[SecurityGroupInstance](r.Instances)
+			inter = parseInstance[types.SecurityGroupInstance](r.Instances)
 		case "aws_instance":
-			inter = parseInstance[Ec2Instance](r.Instances)
+			inter = parseInstance[types.Ec2Instance](r.Instances)
 		default:
 			inter = r.Instances
 		}
@@ -137,7 +139,7 @@ func (p Parser) isPublicSubnet(awsSubId string) bool {
 	routeTables := make(map[string]bool)
 
 	for _, v := range ass {
-		assocInstance := v.(RouteTableAssocInstance)
+		assocInstance := v.(types.RouteTableAssocInstance)
 		if assocInstance.Attributes.SubnetID == awsSubId {
 			routeTables[assocInstance.Attributes.RouteTableID] = true
 		}
@@ -149,7 +151,7 @@ func (p Parser) isPublicSubnet(awsSubId string) bool {
 
 	tfRoutes := p.state["aws_route"]
 	for _, v := range tfRoutes {
-		assocInstance := v.(RouteInstance)
+		assocInstance := v.(types.RouteInstance)
 		routeTableId := assocInstance.Attributes.RouteTableID
 		gateWayId := assocInstance.Attributes.GatewayID
 		destinationAddr := assocInstance.Attributes.DestinationCidrBlock
@@ -162,13 +164,13 @@ func (p Parser) isPublicSubnet(awsSubId string) bool {
 	return false
 }
 
-func (p Parser) listPublicInstances() []Ec2Instance {
+func (p Parser) listPublicInstances() []types.Ec2Instance {
 	tfec2s := p.state["aws_instance"]
 
-	var publicEc2s []Ec2Instance
+	var publicEc2s []types.Ec2Instance
 
 	for _, v := range tfec2s {
-		ec2 := v.(Ec2Instance)
+		ec2 := v.(types.Ec2Instance)
 		subnetId := ec2.Attributes.SubnetID
 		publicIP := ec2.Attributes.PublicIP
 		var sgs []string
@@ -190,7 +192,7 @@ func (p Parser) listPublicInstances() []Ec2Instance {
 func (p Parser) canAccess(tfSgs []string, inter, port string) bool {
 	for _, tfSg := range tfSgs {
 		tsg := p.state["aws_security_group"][tfSg]
-		tsgInstance := tsg.(SecurityGroupInstance)
+		tsgInstance := tsg.(types.SecurityGroupInstance)
 
 		for _, ing := range tsgInstance.Attributes.Ingress {
 			if strconv.Itoa(ing.ToPort) == port && existsCIDR(ing.CidrBlocks, inter) {

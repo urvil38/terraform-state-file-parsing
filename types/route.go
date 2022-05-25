@@ -1,4 +1,4 @@
-package main
+package types
 
 type RouteInstance struct {
 	SchemaVersion int `json:"schema_version"`
